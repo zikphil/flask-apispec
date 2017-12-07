@@ -34,7 +34,7 @@ class Wrapper(object):
         if annotation.apply is not False:
             for option in annotation.options:
                 schema = utils.resolve_instance(option['args'])
-                parsed = parser.parse(schema, locations=option['kwargs']['locations'])
+                parsed = parser.parse(schema.fields, locations=option['kwargs']['locations'])
                 if getattr(schema, 'many', False):
                     args += tuple(parsed)
                 else:
