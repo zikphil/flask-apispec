@@ -9,6 +9,12 @@ from webargs import flaskparser
 
 from flask_apispec import utils
 
+import marshmallow as ma
+
+MARSHMALLOW_VERSION_INFO = tuple(
+    [int(part) for part in ma.__version__.split('.') if part.isdigit()]
+)
+
 class Wrapper(object):
     """Apply annotations to a view function.
 
@@ -35,6 +41,7 @@ class Wrapper(object):
             for option in annotation.options:
                 schema = utils.resolve_instance(option['args'])
                 parsed = parser.parse(schema.fields, locations=option['kwargs']['locations'])
+
                 if getattr(schema, 'many', False):
                     args += tuple(parsed)
                 else:
@@ -48,8 +55,9 @@ class Wrapper(object):
         schemas = utils.merge_recursive(annotation.options)
         schema = schemas.get(status_code, schemas.get('default'))
         if schema and annotation.apply is not False:
-            schema = utils.resolve_instance(schema['schema'])
-            output = schema.dump(unpacked[0]).data
+            schema = utils.resolve_schema(schema['schema'], request=flask.request)
+            dumped = schema.dump(unpacked[0])
+            output = dumped.data if MARSHMALLOW_VERSION_INFO[0] < 3 else dumped
         else:
             output = unpacked[0]
         return format_output((format_response(output), ) + unpacked[1:])
