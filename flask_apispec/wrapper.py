@@ -40,8 +40,8 @@ class Wrapper(object):
         annotation = utils.resolve_annotations(self.func, 'args', self.instance)
         if annotation.apply is not False:
             for option in annotation.options:
-                schema = utils.resolve_instance(option['args'])
-                parsed = parser.parse(schema, locations=option['kwargs']['locations'])
+                schema = utils.resolve_schema(option['args'], request=flask.request)
+                parsed = parser.parse(schema.fields, locations=option['kwargs']['locations'])
                 if getattr(schema, 'many', False):
                     args += tuple(parsed)
                 else:
