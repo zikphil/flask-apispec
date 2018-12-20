@@ -40,8 +40,8 @@ class Wrapper(object):
         annotation = utils.resolve_annotations(self.func, 'args', self.instance)
         if annotation.apply is not False:
             for option in annotation.options:
-                schema = utils.resolve_schema(option['args'], request=flask.request)
-                parsed = parser.parse(schema.fields, locations=option['kwargs']['locations'])
+                schema = utils.resolve_schema(option['args'])
+                parsed = parser.parse(schema, locations=option['kwargs']['locations'])
                 if getattr(schema, 'many', False):
                     args += tuple(parsed)
                 else:
@@ -62,10 +62,10 @@ class Wrapper(object):
         schema = schemas.get(status_code, schemas.get('default'))
         if schema and annotation.apply is not False:
             schema = utils.resolve_schema(schema['schema'], request=flask.request)
-            dumped = schema.dump(unpacked[0])
-            output = dumped.data if MARSHMALLOW_VERSION_INFO[0] < 3 else dumped
+            output = schema.dump(unpacked[0]).data
         else:
             output = unpacked[0]
+
         return format_output((format_response(output), ) + unpacked[1:])
 
 def identity(value):
