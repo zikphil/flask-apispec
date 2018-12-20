@@ -34,18 +34,24 @@ class Wrapper(object):
         return self.marshal_result(unpacked, status_code)
 
     def call_view(self, *args, **kwargs):
+        xyz = kwargs.copy()
         config = flask.current_app.config
         parser = config.get('APISPEC_WEBARGS_PARSER', flaskparser.parser)
         annotation = utils.resolve_annotations(self.func, 'args', self.instance)
         if annotation.apply is not False:
             for option in annotation.options:
-                schema = utils.resolve_instance(option['args'])
+                schema = utils.resolve_schema(option['args'], request=flask.request)
                 parsed = parser.parse(schema.fields, locations=option['kwargs']['locations'])
-
                 if getattr(schema, 'many', False):
                     args += tuple(parsed)
                 else:
                     kwargs.update(parsed)
+
+                kwargs = parsed
+
+        if not annotation.apply:
+            args += tuple(xyz.values())
+
         return self.func(*args, **kwargs)
 
     def marshal_result(self, unpacked, status_code):
